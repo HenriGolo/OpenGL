@@ -80,6 +80,16 @@ int main(int argc, char* argv[])
     // for reshaping
     glutReshapeFunc(reshape);
 
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(60, 1, 0, 15);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(.0, .0, -1.3, // viewpoint
+              0.0, 0.0, 0.0, // look at
+              1.0, 1.0, .0); // up vector
+
     // tell GLUT to wait for events
     glutMainLoop();
 }
