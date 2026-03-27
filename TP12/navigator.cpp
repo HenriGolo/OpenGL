@@ -76,7 +76,7 @@ void redraw()
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(CAM_POS_X, CAM_POS_Y, CAM_POS_Z, // viewpoint
-              CAM_ROT_X, CAM_POS_Y, -1, // look at
+              CAM_POS_X, CAM_POS_Y, -1, // look at
               .0, 1., .0); // up vector
     //glRotatef(CAM_ROT_X, 1, 0, 0);
     //glRotatef(CAM_ROT_Y, 0, 1, 0);
@@ -103,22 +103,22 @@ void keyboard(unsigned char key, int, int)
     // left X
     case 'q':
     case 'Q':
-        CAM_POS_X -= SPEED;
+        CAM_POS_X += SPEED;
         break;
     // right X
     case 'd':
     case 'D':
-        CAM_POS_X += SPEED;
+        CAM_POS_X -= SPEED;
         break;
     // up Y
     case 'a':
     case 'A':
-        CAM_POS_Y += SPEED;
+        CAM_POS_Y -= SPEED;
         break;
     // down Y
     case 'e':
     case 'E':
-        CAM_POS_Y -= SPEED;
+        CAM_POS_Y += SPEED;
         break;
     default: break;
     }
