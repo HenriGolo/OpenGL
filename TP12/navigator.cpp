@@ -18,7 +18,7 @@
 #endif
 
 #define SPEED 1 // OpenGL units
-#define ANG_SPEED 0.5 // degrees
+#define ANG_SPEED (GLfloat) 0.5 // degrees
 
 GLfloat CAM_POS_X = 0, CAM_POS_Y = 0, CAM_POS_Z = 5; // position of the camera
 GLfloat CAM_ROT_X = 0, CAM_ROT_Y = 0; // rotation of the camera
@@ -78,8 +78,8 @@ void redraw()
     gluLookAt(CAM_POS_X, CAM_POS_Y, CAM_POS_Z, // viewpoint
               CAM_POS_X, CAM_POS_Y, -1, // look at
               .0, 1., .0); // up vector
-    //glRotatef(CAM_ROT_X, 1, 0, 0);
-    //glRotatef(CAM_ROT_Y, 0, 1, 0);
+    glRotatef(CAM_ROT_X, 1, 0, 0);
+    glRotatef(CAM_ROT_Y, 0, 1, 0);
     glutPostRedisplay();
 }
 
@@ -103,12 +103,12 @@ void keyboard(unsigned char key, int, int)
     // left X
     case 'q':
     case 'Q':
-        CAM_POS_X += SPEED;
+        CAM_POS_X -= SPEED;
         break;
     // right X
     case 'd':
     case 'D':
-        CAM_POS_X -= SPEED;
+        CAM_POS_X += SPEED;
         break;
     // up Y
     case 'a':
@@ -116,8 +116,8 @@ void keyboard(unsigned char key, int, int)
         CAM_POS_Y -= SPEED;
         break;
     // down Y
-    case 'e':
-    case 'E':
+    case 'w':
+    case 'W':
         CAM_POS_Y += SPEED;
         break;
     default: break;
@@ -129,10 +129,22 @@ void special(int key, int, int)
 {
     switch (key)
     {
+    // rotate Y
     case GLUT_KEY_UP:
+        CAM_ROT_X += ANG_SPEED;
+        break;
+    // rotate Y
     case GLUT_KEY_DOWN:
+        CAM_ROT_X -= ANG_SPEED;
+        break;
+    // rotate X
     case GLUT_KEY_LEFT:
+        CAM_ROT_Y += ANG_SPEED;
+        break;
+    // rotate X
     case GLUT_KEY_RIGHT:
+        CAM_ROT_Y -= ANG_SPEED;
+        break;
     default: break;
     }
     redraw();
