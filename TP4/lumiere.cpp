@@ -29,9 +29,13 @@ float angle_y{45.f};
 float distance{8.f};
 
 
-
 // the color for the ambient light
 float ambient_color[4] = {.5f, .5f, .5f, 1.f};
+
+bool DIRECTIONAL = false;
+float SHININESS = 0;
+float SHININESS_STEP = 5;
+bool LOCAL_VIEWER = true;
 
 Material room_material = {
     // ambient
@@ -44,21 +48,24 @@ Material room_material = {
 
 Material cube_material = {
     // ambient
-    {.7f, .7f, .7f, 1.f},
+    {0.0f, 0.05f, 0.0f, 1.0f},
     // diffuse
-    {.0f, .0f, .0f, 1.f},
+    {0.4f, 0.5f, 0.4f, 1.0f},
     // specular
-    };
+    {0.04f, 0.7f, 0.04f, 1.0f},
+    // shininess
+    10
+};
 
 Material sphere_material = {
     // ambient
-    {.2f, .2f, .2f, 1.f},
+    {0.1745f, 0.01175f, 0.01175f, 0.55f},
     // diffuse
-    {.0f, .0f, .0f, 1.f},
+    {0.61424f, 0.04136f, 0.04136f, 0.55f},
     // specular
-    {.8f, .8f, .8f, 1.f},
+    {0.727811f, 0.626959f, 0.626959f, 0.55f},
     // shininess
-    25.f
+    76.8f
 };
 
 Light light_properties = {
@@ -80,44 +87,44 @@ Light light_properties = {
  */
 void glRoom(GLfloat size)
 {
-    GLfloat v = size/2.f;
+    GLfloat v = size / 2.f;
 
     glBegin(GL_QUADS);
-        glNormal3f(.0f, .0f, 1.f);
-        glVertex3f(-v, -v, -v);
-        glVertex3f(v, -v, -v);
-        glVertex3f(v, v, -v);
-        glVertex3f(-v, v, -v);
+    glNormal3f(.0f, .0f, 1.f);
+    glVertex3f(-v, -v, -v);
+    glVertex3f(v, -v, -v);
+    glVertex3f(v, v, -v);
+    glVertex3f(-v, v, -v);
 
-        glNormal3f(.0f, .0f, -1.f);
-        glVertex3f(v, -v, v);
-        glVertex3f(-v, -v, v);
-        glVertex3f(-v, v, v);
-        glVertex3f(v, v, v);
+    glNormal3f(.0f, .0f, -1.f);
+    glVertex3f(v, -v, v);
+    glVertex3f(-v, -v, v);
+    glVertex3f(-v, v, v);
+    glVertex3f(v, v, v);
 
-        glNormal3f(-1.f, .0f, .0f);
-        glVertex3f(v, -v, -v);
-        glVertex3f(v, -v, v);
-        glVertex3f(v, v, v);
-        glVertex3f(v, v, -v);
+    glNormal3f(-1.f, .0f, .0f);
+    glVertex3f(v, -v, -v);
+    glVertex3f(v, -v, v);
+    glVertex3f(v, v, v);
+    glVertex3f(v, v, -v);
 
-        glNormal3f(1.f, .0f, .0f);
-        glVertex3f(-v, -v, v);
-        glVertex3f(-v, -v, -v);
-        glVertex3f(-v, v, -v);
-        glVertex3f(-v, v, v);
+    glNormal3f(1.f, .0f, .0f);
+    glVertex3f(-v, -v, v);
+    glVertex3f(-v, -v, -v);
+    glVertex3f(-v, v, -v);
+    glVertex3f(-v, v, v);
 
-        glNormal3f(.0f, -1.f, .0f);
-        glVertex3f(-v, v, -v);
-        glVertex3f(v, v, -v);
-        glVertex3f(v, v, v);
-        glVertex3f(-v, v, v);
+    glNormal3f(.0f, -1.f, .0f);
+    glVertex3f(-v, v, -v);
+    glVertex3f(v, v, -v);
+    glVertex3f(v, v, v);
+    glVertex3f(-v, v, v);
 
-        glNormal3f(.0f, 1.f, .0f);
-        glVertex3f(-v, -v, -v);
-        glVertex3f(-v, -v, v);
-        glVertex3f(v, -v, v);
-        glVertex3f(v, -v, -v);
+    glNormal3f(.0f, 1.f, .0f);
+    glVertex3f(-v, -v, -v);
+    glVertex3f(-v, -v, v);
+    glVertex3f(v, -v, v);
+    glVertex3f(v, -v, -v);
     glEnd();
 }
 
@@ -127,9 +134,9 @@ void glRoom(GLfloat size)
  */
 void place_camera()
 {
-    glTranslatef (0.f, 0.f, -distance);
-    glRotatef (angle_x, 1.f, .0f, .0f);
-    glRotatef (angle_y, .0f, 1.f, .0f);
+    glTranslatef(0.f, 0.f, -distance);
+    glRotatef(angle_x, 1.f, .0f, .0f);
+    glRotatef(angle_y, .0f, 1.f, .0f);
 }
 
 /**
@@ -138,75 +145,50 @@ void place_camera()
  */
 void set_ambient_light(const GLfloat* color)
 {
-
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, color);
 }
 
 /**
  * @brief Place a light in the scene
  * @param[in] light light properties to use
 */
-void place_light(Light& light) 
+void place_light(Light& light)
 {
     //**********************************
     // set the light position (directional or positional)
     //**********************************
-
-
-
-
-
-
-
+    GLfloat* position = light.position;
+    position[3] = light.directional || DIRECTIONAL ? 0.f : 1.f;
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light.ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light.diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light.specular);
+    glLightfv(GL_LIGHT0, GL_POSITION, position);
 
     //**********************************
     // draw a yellow point or a yellow line from the origin in the direction of the light
     // to help visualize the light
     //**********************************
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    glPushMatrix();
+    glTranslatef(light.position[0], light.position[1], light.position[2]);
+    glColor3f(1.f, 1.f, 0.f);
+    glutSolidSphere(.1f, 10, 10);
+    glPopMatrix();
 
     //**********************************
     // turn the light and the lighting on
     //**********************************
-
-
-
-
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
 }
 
 /**
  * @brief Define the material properties for the object
  * @param[in] mat material properties to use
- 
+
 */
-void define_material(const Material& mat) 
+void define_material(const Material& mat)
 {
-   //**********************************
+    //**********************************
     // set the ambient property
     //**********************************
     glMaterialfv(GL_FRONT, GL_AMBIENT, mat.ambient);
@@ -224,7 +206,7 @@ void define_material(const Material& mat)
     //**********************************
     // set the shininess property
     //**********************************
-    glMaterialf(GL_FRONT, GL_SHININESS, mat.shininess);
+    glMaterialf(GL_FRONT, GL_SHININESS, mat.shininess + SHININESS);
 }
 
 /**
@@ -233,33 +215,32 @@ void define_material(const Material& mat)
 void place_background()
 {
     glPushMatrix();
-        glScalef(room_size, room_size, room_size);
-        glRoom(1.f);
-    glPopMatrix ();
+    glScalef(room_size, room_size, room_size);
+    glRoom(1.f);
+    glPopMatrix();
 }
 
 
 /**
  * @brief OpenGL Initialization
  */
-void init ()
+void init()
 {
     glClearColor(.0f, .0f, .0f, .0f);
     //**********************************
     // activate the Gouraud shading instead of the flat one
     //**********************************
-    glShadeModel (GL_FLAT);
+    glShadeModel(GL_FLAT);
 
     //**********************************
     // enable face culling
     //**********************************
-
+    glEnable(GL_CULL_FACE);
 
     //**********************************
     // enable the depth test
     //**********************************
-
-
+    glEnable(GL_DEPTH_TEST);
 
     glEnable(GL_NORMALIZE);
 }
@@ -273,70 +254,66 @@ void display(double aspect_ratio)
     // set the ambient light in the scene using set_ambient_light
     // with the color defined by ambient_color
     //**********************************
-
+    set_ambient_light(ambient_color);
 
     glPushMatrix();
-        // define the projection transformation
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        gluPerspective(60, aspect_ratio, 1, 60);
+    // define the projection transformation
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(60, aspect_ratio, 1, 60);
 
-        glPushMatrix();
+    glPushMatrix();
 
-            glMatrixMode(GL_MODELVIEW);
+    glMatrixMode(GL_MODELVIEW);
 
-            glLoadIdentity();
+    glLoadIdentity();
 
-            //place the camera
-            place_camera();
+    //place the camera
+    place_camera();
 
-            //**********************************
-            // place the light in the scene using place_light
-            //**********************************
+    //**********************************
+    // place the light in the scene using place_light
+    //**********************************
+    place_light(light_properties);
 
+    //**********************************
+    // define the material for the room (instead of color)
+    //**********************************
+    // glColor3f(1.f, 1.f, 1.f);
+    define_material(room_material);
 
+    place_background();
 
-            //**********************************
-            // define the material for the room (instead of color)
-            //**********************************
-            glColor3f (1.f, 1.f, 1.f);
+    // the 2 objects
+    // red shining sphere
+    glPushMatrix();
+    glTranslatef(-2.f, 0.f, 0.f);
 
+    //**********************************
+    // define the material for the sphere (instead of color)
+    //**********************************
+    // glColor3f(1.f, 0.f, 0.f);
+    define_material(sphere_material);
 
+    glutSolidSphere(1., 24, 12);
 
-            place_background();
+    glPopMatrix();
 
-            // the 2 objects
-            // red shining sphere
-            glPushMatrix ();
-                glTranslatef (-2.f, 0.f, 0.f);
+    // green cube
+    glPushMatrix();
+    glTranslatef(2.f, 0.f, 0.f);
 
-                //**********************************
-                // define the material for the sphere (instead of color)
-                //**********************************
-                glColor3f (1.f, 0.f, 0.f);
+    //**********************************
+    // define the material for the cube (instead of color)
+    //**********************************
+    // glColor3f(0.f, 1.f, 0.f);
+    define_material(cube_material);
 
+    glutSolidCube(2.0);
 
+    glPopMatrix();
 
-                glutSolidSphere(1., 24, 12);
-
-            glPopMatrix();
-
-            // green cube
-            glPushMatrix();
-                glTranslatef(2.f, 0.f, 0.f);
-
-                //**********************************
-                // define the material for the cube (instead of color)
-                //**********************************
-                glColor3f (0.f, 1.f, 0.f);
-
-
-
-                glutSolidCube(2.0);
-
-            glPopMatrix ();
-
-        glPopMatrix();
+    glPopMatrix();
     glPopMatrix();
 }
 
@@ -348,53 +325,36 @@ void display(double aspect_ratio)
  */
 void keyboard(unsigned char key, int x, int y)
 {
-    switch (key) 
+    switch (key)
     {
-        //**********************************
-        // directional light, use global variable directional
-        //**********************************
-        case 'd':
-
-
-
-
-
-
-
+    //**********************************
+    // directional light, use global variable directional
+    //**********************************
+    case 'd':
+    case 'D':
+        DIRECTIONAL = !DIRECTIONAL;
         break;
 
-        //**********************************
-        // Shininess: 's' to decrement, 'S' to increment
-        //**********************************
-        case 'S':
-
-
-
-
-
-
-
+    //**********************************
+    // Shininess: 's' to decrement, 'S' to increment
+    //**********************************
+    case 'S':
+        SHININESS += SHININESS_STEP;
+        break;
+    case 's':
+        SHININESS -= SHININESS_STEP;
         break;
 
-        case 's':
-
-
-
-
+    case 'l':
+    case 'L':
+        LOCAL_VIEWER = !LOCAL_VIEWER;
+        glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, LOCAL_VIEWER ? GL_TRUE : GL_FALSE);
         break;
 
-
-
-
-
-
-
-        break;
-
-        case 'q':
-        case 27: // [ESC]
-            exit(0);
-        default:
+    case 'q':
+    case 27: // [ESC]
+        exit(0);
+    default:
         break;
     }
     ImGui_ImplGLUT_KeyboardFunc(key, x, y);
@@ -414,10 +374,10 @@ void keyboard(unsigned char key, int x, int y)
  */
 void reshape(int w, int h)
 {
-    glViewport (0, 0, (GLsizei) w, (GLsizei) h);
-    glMatrixMode (GL_PROJECTION);
+    glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+    glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective (60, (GLfloat)w/(GLfloat)h, 0.1, 50);
+    gluPerspective(60, (GLfloat)w / (GLfloat)h, 0.1, 50);
 }
 
 /**
@@ -430,28 +390,29 @@ void special(int key, int x, int y)
     static constexpr float DELTA_DISTANCE{.3f};
     static constexpr float DISTANCE_MIN{.0f};
 
-    switch (key) {
-        case GLUT_KEY_UP:
-            angle_x = std::fmod(angle_x + DELTA_ANGLE_X, 360.f);
+    switch (key)
+    {
+    case GLUT_KEY_UP:
+        angle_x = std::fmod(angle_x + DELTA_ANGLE_X, 360.f);
         break;
-        case GLUT_KEY_DOWN:
-            angle_x = std::fmod(angle_x - DELTA_ANGLE_X, 360.f);
+    case GLUT_KEY_DOWN:
+        angle_x = std::fmod(angle_x - DELTA_ANGLE_X, 360.f);
         break;
-        case GLUT_KEY_LEFT:
-            angle_y = std::fmod(angle_y + DELTA_ANGLE_Y, 360.f);
+    case GLUT_KEY_LEFT:
+        angle_y = std::fmod(angle_y + DELTA_ANGLE_Y, 360.f);
         break;
-        case GLUT_KEY_RIGHT:
-            angle_y = std::fmod(angle_y - DELTA_ANGLE_Y, 360.f);
+    case GLUT_KEY_RIGHT:
+        angle_y = std::fmod(angle_y - DELTA_ANGLE_Y, 360.f);
         break;
-        case GLUT_KEY_PAGE_DOWN:
-            distance += DELTA_DISTANCE;
+    case GLUT_KEY_PAGE_DOWN:
+        distance += DELTA_DISTANCE;
         break;
-        case GLUT_KEY_PAGE_UP:
-            distance -= (distance > DISTANCE_MIN)? DELTA_DISTANCE: .0f;
+    case GLUT_KEY_PAGE_UP:
+        distance -= (distance > DISTANCE_MIN) ? DELTA_DISTANCE : .0f;
         break;
 
-        default:
-            break;
+    default:
+        break;
     }
     ImGui_ImplGLUT_SpecialFunc(key, x, y);
     glutPostRedisplay();
@@ -468,7 +429,6 @@ void render()
     ImGuiIO& io = ImGui::GetIO();
     // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
     {
-
         ImGui::Begin("Scene controls");
 
         ImGui::Text("Room");
@@ -508,31 +468,31 @@ void render()
     ImGui::Render();
 
     glViewport(0, 0, (GLsizei)io.DisplaySize.x, (GLsizei)io.DisplaySize.y);
-    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-        display(io.DisplaySize.x/io.DisplaySize.y);
+    display(io.DisplaySize.x / io.DisplaySize.y);
 
     glPopAttrib();
 
     ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 
-    glutSwapBuffers ();
+    glutSwapBuffers();
     glutPostRedisplay();
 }
 
-int main (int argc, char **argv)
+int main(int argc, char** argv)
 {
-    glutInit (&argc,argv);
+    glutInit(&argc, argv);
     // enable the double buffer and the depth buffer
-    glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 
     // main window
     //glutInitWindowSize (640,480);
     glutInitWindowSize(1280, 720);
-    glutInitWindowPosition(50,50);
-    glutCreateWindow ("Testing OpenGL light");
+    glutInitWindowPosition(50, 50);
+    glutCreateWindow("Testing OpenGL light");
 
     // // callbacks
     glutDisplayFunc(render);
@@ -546,7 +506,8 @@ int main (int argc, char **argv)
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 
     // Setup Dear ImGui style
