@@ -19,19 +19,19 @@
  * @param[out] destNorm The new list of normals for each new vertex of the subdivided mesh
  */
 void loopSubdivision(const std::vector<point3d>& origVert, //!< the original vertices
-                     const std::vector<face>& origMesh,    //!< the original mesh
-                     std::vector<point3d>& destVert,       //!< the new vertices
-                     std::vector<face>& destMesh,          //!< the new mesh
-                     std::vector<vec3d>& destNorm)         //!< the new normals
+                     const std::vector<face>& origMesh, //!< the original mesh
+                     std::vector<point3d>& destVert, //!< the new vertices
+                     std::vector<face>& destMesh, //!< the new mesh
+                     std::vector<vec3d>& destNorm) //!< the new normals
 {
     // copy the original vertices in destVert
     destVert = origVert;
 
     // start fresh with the new mesh
-    destMesh.clear( );
+    destMesh.clear();
 
-    //    PRINTVAR(destVert);
-    //    PRINTVAR(origVert);
+    PRINTVAR(destVert);
+    PRINTVAR(origVert);
 
     // create a list of the new vertices created with the reference to the edge
     EdgeList newVertices;
@@ -39,21 +39,19 @@ void loopSubdivision(const std::vector<point3d>& origVert, //!< the original ver
     //*********************************************************************
     // for each face
     //*********************************************************************
-
+    for (face f : origMesh)
     {
         //*********************************************************************
         // get the indices of the triangle vertices
         //*********************************************************************
-
-
-
+        idxtype v1 = f.v1, v2 = f.v2, v3 = f.v3;
 
         //*********************************************************************
         // for each edge get the index of the vertex of the midpoint using getNewVertex
         //*********************************************************************
-
-
-
+        idxtype a = getNewVertex(edge(v1, v2), destVert, origMesh, newVertices);
+        idxtype b = getNewVertex(edge(v2, v3), destVert, origMesh, newVertices);
+        idxtype c = getNewVertex(edge(v3, v1), destVert, origMesh, newVertices);
 
         //*********************************************************************
         // create the four new triangles
@@ -71,11 +69,16 @@ void loopSubdivision(const std::vector<point3d>& origVert, //!< the original ver
         // the original triangle was v1-v2-v3, use the same clock-wise order for the other
         // hence v1-a-c, a-b-c and so on
         //*********************************************************************
-
-
-
-
-
+        // Création des faces
+        face v1ac = (face(v1, a, c));
+        face abc = face(a, b, c);
+        face av2b = face(a, v2, b);
+        face cbv3 = face(c, b, v3);
+        // Ajout des faces
+        destMesh.push_back(v1ac);
+        destMesh.push_back(abc);
+        destMesh.push_back(av2b);
+        destMesh.push_back(cbv3);
     }
 
     //*********************************************************************
@@ -89,15 +92,15 @@ void loopSubdivision(const std::vector<point3d>& origVert, //!< the original ver
     //*********************************************************************
 
     // A list containing the occurrence of each vertex
-    std::vector<size_t> occurrences( origVert.size( ), 0 );
+    std::vector<size_t> occurrences(origVert.size(), 0);
 
     // A list of the same size as origVert with all the elements initialized to [0 0 0]
-    std::vector<point3d> tmp( origVert.size( ) );
+    std::vector<point3d> tmp(origVert.size());
 
     //*********************************************************************
     // for each face
     //*********************************************************************
-
+    for (face f : origMesh)
     {
         //*********************************************************************
         // consider each of the 3 vertices:
@@ -106,31 +109,26 @@ void loopSubdivision(const std::vector<point3d>& origVert, //!< the original ver
         // BE CAREFUL WITH THE COEFFICIENT OF THE OTHER 2 VERTICES!... consider
         // how many times each vertex is summed in the general case...
         //*********************************************************************
-
-
-
-
-
-
-
-
-
+        // Incrément
+        occurrences[f.v1]++;
+        occurrences[f.v2]++;
+        occurrences[f.v3]++;
+        // Loop update
     }
 
     //*********************************************************************
     //  To obtain the new vertices, divide each vertex by its occurrence value
     //*********************************************************************
-
+    for (size_t i = 0; i < occurrences.size(); i++)
     {
-//         assert( occurrences[i] != 0 );
-
+        assert(occurrences[i] != 0);
     }
-    //PRINTVAR(destVert);
+    PRINTVAR(destVert);
 
     // redo the normals, reset and create a list of normals of the same size as
     // the vertices, each normal set to [0 0 0]
-    destNorm.clear( );
-    destNorm = std::vector<vec3d>(destVert.size( ));
+    destNorm.clear();
+    destNorm = std::vector<vec3d>(destVert.size());
 
     //*********************************************************************
     //  Recompute the normals for each face
@@ -145,17 +143,10 @@ void loopSubdivision(const std::vector<point3d>& origVert, //!< the original ver
         //*********************************************************************
         // Sum the normal of the face to each vertex normal using the angleAtVertex as weight
         //*********************************************************************
-
-
-
     }
     //*********************************************************************
     // normalize the normals of each vertex
     //*********************************************************************
-
-
-
-
 }
 
 /**
@@ -175,34 +166,34 @@ idxtype getNewVertex(const edge& e,
                      const std::vector<face>& mesh,
                      EdgeList& newVertList)
 {
-    //    PRINTVAR(e);
-    //    PRINTVAR(newVertList);
+    PRINTVAR(e);
+    PRINTVAR(newVertList);
 
     //*********************************************************************
     // if the egde is NOT contained in the new vertex list (see EdgeList.contains() method)
     //*********************************************************************
-
+    if (!newVertList.contains(e))
     {
         //*********************************************************************
         // generate new index (vertex.size)
         //*********************************************************************
-
+        idxtype idx = vertList.size();
 
         //*********************************************************************
         // add the edge and index to the newVertList
         //*********************************************************************
-
+        newVertList.add(e, idx);
 
         // generate new vertex
-        point3d nvert;        //!< this will contain the new vertex
-        idxtype oppV1;        //!< the index of the first "opposite" vertex
-        idxtype oppV2;        //!< the index of the second "opposite" vertex (if it exists)
+        point3d nvert; //!< this will contain the new vertex
+        idxtype oppV1; //!< the index of the first "opposite" vertex
+        idxtype oppV2; //!< the index of the second "opposite" vertex (if it exists)
 
         //*********************************************************************
         // check if it is a boundary edge, ie check if there is another triangle
         // sharing this edge and if so get the index of its "opposite" vertex
         //*********************************************************************
-
+        if (!isBoundaryEdge(e, mesh, oppV1, oppV2))
         {
             // if it is not a boundary edge create the new vertex
 
@@ -214,16 +205,13 @@ idxtype getNewVertex(const edge& e,
             //
             // REMEMBER THAT IN THE CODE OPPV1 AND OPPV2 ARE INDICES, NOT VERTICES!!!
             //*********************************************************************
-
-
         }
-//         else
+        else
         {
             //*********************************************************************
             // otherwise it is a boundary edge then the vertex is the linear combination of the
             // two extrema
             //*********************************************************************
-
         }
         //*********************************************************************
         // append the new vertex to the list of vertices
@@ -233,16 +221,16 @@ idxtype getNewVertex(const edge& e,
         //*********************************************************************
         // return the index of the new vertex
         //*********************************************************************
-
+        return idx;
     }
-//     else
+    else
     // else we don't need to do anything, just return the associated index of the
     // already existing vertex
     {
         //*********************************************************************
         // get and return the index of the vertex
         //*********************************************************************
-
+        return newVertList.getIndex(e);
     }
 
     // this is just to avoid compilation errors at the beginning
