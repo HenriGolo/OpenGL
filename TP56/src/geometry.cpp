@@ -17,18 +17,17 @@
  * @return the normal of the face as a normalized vector
  * @note the normal is normalized
  */
-vec3d computeNormal( const point3d& v1, const point3d& v2, const point3d& v3)
+vec3d computeNormal(const point3d& v1, const point3d& v2, const point3d& v3)
 {
     //**************************************************
     // compute the cross product between two edges of the triangular face
     //**************************************************
-    vec3d norm;
-
+    vec3d norm = v1.cross(v2) + v2.cross(v3);
 
     //**************************************************
     // remember to normalize the result before returning it
     //**************************************************
-
+    norm.normalize();
 
     return norm;
 }
@@ -47,18 +46,18 @@ vec3d computeNormal( const point3d& v1, const point3d& v2, const point3d& v3)
  * @param v2 the other vertex of the second edge baseV-v2
  * @return the angle in radiants
  */
-float angleAtVertex( const point3d& baseV, const point3d& v2, const point3d& v3 )
+float angleAtVertex(const point3d& baseV, const point3d& v2, const point3d& v3)
 {
     const vec3d e1 = baseV - v2;
     const vec3d e2 = baseV - v3;
     //safe acos...
-    if ( std::fabs( e1.dot( e2 ) / (e1.norm( ) * e2.norm( )) ) >= 1.f )
+    if (std::fabs(e1.dot(e2) / (e1.norm() * e2.norm())) >= 1.f)
     {
         std::cerr << "warning: using safe acos" << std::endl;
-        return (std::acos( 1.f ));
+        return (std::acos(1.f));
     }
     else
     {
-        return ( std::acos( e1.dot( e2 ) / (e1.norm( ) * e2.norm( )) ));
+        return (std::acos(e1.dot(e2) / (e1.norm() * e2.norm())));
     }
 }

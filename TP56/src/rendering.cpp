@@ -25,40 +25,38 @@ void drawWireframe(const std::vector<point3d>& vertices,
     glDisable(GL_LIGHTING);
 
     // if we are displaying the object with colored faces
-    if ( params.solid )
+    if (params.solid)
     {
-        // use black ticker lines
-        glColor3f( .0f, .0f, .0f );
-        glLineWidth( 2.f );
+        // use black thicker lines
+        glColor3f(.0f, .0f, .0f);
+        glLineWidth(2.f);
     }
     else
     {
         // otherwise use white thinner lines for wireframe only
-        glColor3f( .8f, .8f, .8f );
-        glLineWidth( .21f );
+        glColor3f(.8f, .8f, .8f);
+        glLineWidth(.21f);
     }
 
     //**************************************************
     // for each face of the mesh...
     //**************************************************
-
+    for (face f : mesh)
     {
         //**************************************************
         // draw the contour of the face as a  GL_LINE_LOOP
         //**************************************************
-
-
-
-
-
-
-
+        glBegin(GL_LINE_LOOP);
+        glVertex3fv((float*)&vertices[f.v1]);
+        glVertex3fv((float*)&vertices[f.v2]);
+        glVertex3fv((float*)&vertices[f.v3]);
+        glEnd();
     }
 
     //**************************************************
     // re-enable the lighting
     //**************************************************
-    glEnable( GL_LIGHTING );
+    glEnable(GL_LIGHTING);
 }
 
 /**
@@ -69,65 +67,56 @@ void drawWireframe(const std::vector<point3d>& vertices,
  * @param[in] params If smooth is true, the model is drawn with smooth shading, otherwise with flat shading
  */
 void drawFaces(const std::vector<point3d>& vertices,
-                   const std::vector<face>& mesh,
-                   const std::vector<vec3d>& vertexNormals,
-                   const RenderingParameters& params)
+               const std::vector<face>& mesh,
+               const std::vector<vec3d>& vertexNormals,
+               const RenderingParameters& params)
 {
     // shading model to use
-    if(!params.smooth)
+    if (!params.smooth)
     {
         glShadeModel(GL_FLAT);
 
         //**************************************************
         // for each face
         //**************************************************
-
+        for (face f : mesh)
         {
             //**************************************************
             // Compute the normal to the face and then draw the
             // faces as GL_TRIANGLES assigning the proper normal
             //**************************************************
-
-
-
-
-
-
-
-
-
-
-
-
+            point3d v1 = vertices[f.v1], v2 = vertices[f.v2], v3 = vertices[f.v3];
+            vec3d normal = computeNormal(v1, v2, v3);
+            glBegin(GL_TRIANGLES);
+            glNormal3fv((float*)&normal);
+            glVertex3fv((float*)&v1);
+            glVertex3fv((float*)&v2);
+            glVertex3fv((float*)&v3);
+            glEnd();
         }
-
     }
     else
     {
         glShadeModel(GL_SMOOTH);
-
+        for (face f : mesh)
         {
             //**************************************************
             // Compute the normal to the face and then draw the
             // faces as GL_TRIANGLES assigning the proper normal
             //**************************************************
-
-
-
-
-
-
-
-
-
-
-
-
-
+            point3d v1 = vertices[f.v1], v2 = vertices[f.v2], v3 = vertices[f.v3];
+            vec3d n1 = vertexNormals[f.v1], n2 = vertexNormals[f.v2], n3 = vertexNormals[f.v3];
+            glBegin(GL_TRIANGLES);
+            glNormal3fv((float*)&n1);
+            glVertex3fv((float*)&v1);
+            glNormal3fv((float*)&n2);
+            glVertex3fv((float*)&v2);
+            glNormal3fv((float*)&n3);
+            glVertex3fv((float*)&v3);
+            glEnd();
         }
     }
 }
-
 
 
 /**
@@ -141,45 +130,45 @@ void drawArrayFaces(const std::vector<point3d>& vertices,
                     const std::vector<face>& indices,
                     const std::vector<vec3d>& vertexNormals)
 {
-
     glShadeModel(GL_SMOOTH);
 
     //****************************************
     // Enable vertex arrays
     //****************************************
-
+    glEnableClientState(GL_VERTEX_ARRAY);
 
     //****************************************
     // Enable normal arrays
     //****************************************
-
+    glEnableClientState(GL_NORMAL_ARRAY);
 
     //****************************************
     // Normal pointer to normal array
     //****************************************
-
+    const vec3d* normalPointer = vertexNormals.data();
 
     //****************************************
     // Vertex pointer to Vertex array
     //****************************************
-
+    const point3d* vertexPointer = vertices.data();
 
     //****************************************
     // Draw the faces
     //****************************************
-
+    glVertexPointer(3, GL_FLOAT, 0, vertexPointer);
+    glNormalPointer(GL_FLOAT, 0, normalPointer);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, indices.data());
 
     //****************************************
     // Disable vertex arrays
     //****************************************
-
+    glDisableClientState(GL_VERTEX_ARRAY);
 
     //****************************************
     // Disable normal arrays
     //****************************************
-
+    glDisableClientState(GL_NORMAL_ARRAY);
 }
-
 
 
 //////////////////////////////////////// Nothing to do after this /////////////////////////////////
@@ -191,7 +180,7 @@ void drawNormals(const std::vector<point3d>& vertices, const std::vector<vec3d>&
     glColor3f(.8f, .0f, .0f);
     glLineWidth(2);
 
-    for(std::size_t i = 0; i < vertices.size(); ++i)
+    for (std::size_t i = 0; i < vertices.size(); ++i)
     {
         glBegin(GL_LINES);
 
@@ -213,7 +202,7 @@ void drawSolid(const std::vector<point3d>& vertices,
                const std::vector<vec3d>& vertexNormals,
                const RenderingParameters& params)
 {
-    if(params.useIndexRendering)
+    if (params.useIndexRendering)
     {
         drawArrayFaces(vertices, indices, vertexNormals);
     }
@@ -231,14 +220,15 @@ void drawSolid(const std::vector<point3d>& vertices,
  * @param vertexNormals list of normals
  * @param params Rendering parameters
  */
-void draw( const std::vector<point3d> &vertices, const std::vector<face> &indices, const std::vector<vec3d> &vertexNormals, const RenderingParameters &params )
+void draw(const std::vector<point3d>& vertices, const std::vector<face>& indices,
+          const std::vector<vec3d>& vertexNormals, const RenderingParameters& params)
 {
-    if ( params.solid )
+    if (params.solid)
     {
-        drawSolid( vertices, indices, vertexNormals, params );
+        drawSolid(vertices, indices, vertexNormals, params);
     }
-    if ( params.wireframe )
+    if (params.wireframe)
     {
-        ::drawWireframe( vertices, indices, params );
+        ::drawWireframe(vertices, indices, params);
     }
 }

@@ -288,7 +288,7 @@ void keyboard( unsigned char key, int , int  )
             break;
     }
     glutPostRedisplay( );
-    printKeyboardHelp();
+    //printKeyboardHelp();
 }
 
 void arrows( int key, int , int )
@@ -473,4 +473,3 @@ void initialize( )
     gluPerspective( win.field_of_view_angle, aspect, win.z_near, win.z_far );
     glMatrixMode( GL_MODELVIEW );
 }
-
