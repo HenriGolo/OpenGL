@@ -230,7 +230,7 @@ void init()
     //**********************************
     // activate the Gouraud shading instead of the flat one
     //**********************************
-    glShadeModel(GL_FLAT);
+    glShadeModel(GL_SMOOTH);
 
     //**********************************
     // enable face culling
