@@ -16,7 +16,7 @@
 #include <functional>
 
 
-#define DEBUGGING 1
+#define DEBUGGING 0
 
 #if DEBUGGING
 #define PRINTVAR( a ) std::cout << #a << " = " << (a) << "\n\n";
@@ -532,4 +532,3 @@ inline std::ostream& operator<<( std::ostream& os, const std::vector<face>& p )
  * @return true if the edge is not a boundary edge
  */
 bool isBoundaryEdge( const edge &e, const std::vector<face> &triangleList, idxtype &oppVert1, idxtype &oppVert2 );
-

@@ -29,17 +29,14 @@ float angle2 = .0f;
 float robotAngleX = .0f;
 float robotAngleY = .0f;
 
-
+// Global variables to adjust the pincers gap
+float pincersGap = .0f;
 
 constexpr float angle_step = 5.f;
 constexpr float angle_max = 360.f;
-constexpr float pincers_thickness = .25f;
 constexpr float pincers_step = .05f;
-constexpr float pincers_min = pincers_thickness/2;
+constexpr float pincers_min = .25f;
 constexpr float pincers_max = .5f;
-
-// Global variables to adjust the pincers gap
-float pincersGap = pincers_min;
 
 
 /**
@@ -177,7 +174,7 @@ void drawPincers()
     glPushMatrix();
     {
         glTranslatef(-pincersGap, .5, 0);
-        glScalef(pincers_thickness, 1, pincers_thickness);
+        glScalef(.25, 1, .25);
         glutWireCube(1);
     }
     glPopMatrix();
@@ -185,7 +182,7 @@ void drawPincers()
     glPushMatrix();
     {
         glTranslatef(pincersGap, .5, 0);
-        glScalef(pincers_thickness, 1, pincers_thickness);
+        glScalef(.25, 1, .25);
         glutWireCube(1);
     }
     glPopMatrix();
@@ -346,12 +343,10 @@ void keyboard(unsigned char key, int, int)
     // Manage the update of PincersGap with the key 'o' and 'l'
     //**********************************
     case 'o':
-        //pincersGap = std::max(std::min(pincersGap + pincers_step, pincers_max), pincers_min);
-        pincersGap = std::min(pincersGap + pincers_step, pincers_max);
+        pincersGap = std::max(std::min(pincersGap + pincers_step, pincers_max), pincers_min);
         break;
     case 'l':
-        //pincersGap = std::min(std::max(pincersGap - pincers_step, -pincers_max), -pincers_min);
-        pincersGap = std::max(pincersGap - pincers_step, pincers_min);
+        pincersGap = std::min(std::max(pincersGap - pincers_step, -pincers_max), -pincers_min);
         break;
 
     default:

@@ -70,7 +70,7 @@ void loopSubdivision(const std::vector<point3d>& origVert, //!< the original ver
         // hence v1-a-c, a-b-c and so on
         //*********************************************************************
         // Création des faces
-        face v1ac = (face(v1, a, c));
+        face v1ac = face(v1, a, c);
         face abc = face(a, b, c);
         face av2b = face(a, v2, b);
         face cbv3 = face(c, b, v3);
@@ -96,6 +96,7 @@ void loopSubdivision(const std::vector<point3d>& origVert, //!< the original ver
 
     // A list of the same size as origVert with all the elements initialized to [0 0 0]
     std::vector<point3d> tmp(origVert.size());
+    for (size_t i = 0; i < origVert.size(); i++) tmp[i] = point3d(0, 0, 0);
 
     //*********************************************************************
     // for each face
@@ -114,6 +115,12 @@ void loopSubdivision(const std::vector<point3d>& origVert, //!< the original ver
         occurrences[f.v2]++;
         occurrences[f.v3]++;
         // Loop update
+        // (3) ^V = 5/8 V + 3/8 sum(V_i)
+        // le coefficient 1/n est géré plus loin
+        // Chaque sommet est modifié 2 fois : coefficients deviennent 5/8=10/16 et 3/16
+        tmp[f.v1] += (10 * origVert[f.v1] + 3 * (origVert[f.v2] + origVert[f.v3])) / 16;
+        tmp[f.v2] += (10 * origVert[f.v2] + 3 * (origVert[f.v3] + origVert[f.v1])) / 16;
+        tmp[f.v3] += (10 * origVert[f.v3] + 3 * (origVert[f.v1] + origVert[f.v2])) / 16;
     }
 
     //*********************************************************************
@@ -121,7 +128,8 @@ void loopSubdivision(const std::vector<point3d>& origVert, //!< the original ver
     //*********************************************************************
     for (size_t i = 0; i < occurrences.size(); i++)
     {
-        assert(occurrences[i] != 0);
+        if (occurrences[i] != 0)
+            destVert[i] = tmp[i] / (float)occurrences[i];
     }
     PRINTVAR(destVert);
 
@@ -133,20 +141,27 @@ void loopSubdivision(const std::vector<point3d>& origVert, //!< the original ver
     //*********************************************************************
     //  Recompute the normals for each face
     //*********************************************************************
-
+    for (face f : destMesh)
     {
         //*********************************************************************
         //  Calculate the normal of the triangles, it will be the same for each vertex
         //*********************************************************************
-
+        vec3d normal = computeNormal(destVert[f.v1], destVert[f.v2], destVert[f.v3]);
 
         //*********************************************************************
         // Sum the normal of the face to each vertex normal using the angleAtVertex as weight
         //*********************************************************************
+        destNorm[f.v1] += normal * angleAtVertex(destVert[f.v1], destVert[f.v2], destVert[f.v3]);
+        destNorm[f.v2] += normal * angleAtVertex(destVert[f.v2], destVert[f.v3], destVert[f.v1]);
+        destNorm[f.v3] += normal * angleAtVertex(destVert[f.v3], destVert[f.v1], destVert[f.v2]);
     }
     //*********************************************************************
     // normalize the normals of each vertex
     //*********************************************************************
+    for (vec3d& normal : destNorm)
+    {
+        normal.normalize();
+    }
 }
 
 /**
@@ -189,6 +204,9 @@ idxtype getNewVertex(const edge& e,
         idxtype oppV1; //!< the index of the first "opposite" vertex
         idxtype oppV2; //!< the index of the second "opposite" vertex (if it exists)
 
+        point3d v1 = vertList[e.first];
+        point3d v2 = vertList[e.second];
+
         //*********************************************************************
         // check if it is a boundary edge, ie check if there is another triangle
         // sharing this edge and if so get the index of its "opposite" vertex
@@ -196,7 +214,8 @@ idxtype getNewVertex(const edge& e,
         if (!isBoundaryEdge(e, mesh, oppV1, oppV2))
         {
             // if it is not a boundary edge create the new vertex
-
+            point3d opp1 = vertList[oppV1];
+            point3d opp2 = vertList[oppV2];
             //*********************************************************************
             // the new vertex is the linear combination of the two extrema of
             // the edge V1 and V2 and the two opposite vertices oppV1 and oppV2
@@ -205,6 +224,7 @@ idxtype getNewVertex(const edge& e,
             //
             // REMEMBER THAT IN THE CODE OPPV1 AND OPPV2 ARE INDICES, NOT VERTICES!!!
             //*********************************************************************
+            nvert = (3 * (v1 + v2) + (opp1 + opp2)) / 8;
         }
         else
         {
@@ -212,11 +232,12 @@ idxtype getNewVertex(const edge& e,
             // otherwise it is a boundary edge then the vertex is the linear combination of the
             // two extrema
             //*********************************************************************
+            nvert = (v1 + v2) / 2;
         }
         //*********************************************************************
         // append the new vertex to the list of vertices
         //*********************************************************************
-
+        vertList.push_back(nvert);
 
         //*********************************************************************
         // return the index of the new vertex

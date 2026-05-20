@@ -157,7 +157,7 @@ void drawArrayFaces(const std::vector<point3d>& vertices,
     //****************************************
     glVertexPointer(3, GL_FLOAT, 0, vertexPointer);
     glNormalPointer(GL_FLOAT, 0, normalPointer);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, indices.data());
+    glDrawElements(GL_TRIANGLES, indices.size() * 3, GL_UNSIGNED_INT, indices.data());
 
     //****************************************
     // Disable vertex arrays

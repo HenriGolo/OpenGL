@@ -22,7 +22,7 @@ vec3d computeNormal(const point3d& v1, const point3d& v2, const point3d& v3)
     //**************************************************
     // compute the cross product between two edges of the triangular face
     //**************************************************
-    vec3d norm = v1.cross(v2) + v2.cross(v3);
+    vec3d norm = (v2 - v1).cross(v3 - v1);
 
     //**************************************************
     // remember to normalize the result before returning it
